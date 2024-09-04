@@ -5,7 +5,8 @@ from utils.PortDetection import list_serial_ports
 from Devices.controller import TemperatureController
 from GUI.ui import MainWindow
 import subprocess
-
+from utils.ValkeyFuncs import ValkeyLog
+import pandas as pd
 
 class Application:
     def __init__(self):
@@ -14,6 +15,7 @@ class Application:
         self.window = None
         self.valkey_process = None
         self.valkey_db = None
+        self.valkey_log = ValkeyLog()
 
     def create_valkey_config(self):
         # Define the path for the Valkey config file
@@ -57,6 +59,32 @@ class Application:
             self.valkey_process = subprocess.Popen([valkey_server_path, valkey_config_path])
         except Exception:
             self.window.show_valkey_warning_popup()
+
+    def transfer_valkey_to_csv(self):
+        try:
+            keys =  self.valkey_log.r.keys('data_*')
+            data_list = []
+            for key in keys:
+                data = self.valkey_log.r.hgetall(key)
+                data = {k.decode(): v.decode() for k, v in data.items()}
+                data_list.append(data)
+
+            df = pd.DataFrame(data_list)
+            df.to_csv("valkey_data.csv", index=False)
+            return True
+        except:
+            return False
+
+    def purge_valkey_db(self):
+        """
+        Purge the Valkey database by deleting all `data_*` keys.
+        """
+        try:
+            keys = self.valkey_log.r.keys('data_*')
+            self.valkey_log.r.delete(*keys)
+            return True
+        except:
+            return False
 
     def controller_connection(self):
         available_ports = list_serial_ports()
@@ -120,16 +148,19 @@ class Application:
         if self.controller:
             shutdown_success = self.controller.shut_down()
             if shutdown_success:
-                pass
-                # implement purge of valkey db and conversion to csv
+                convert_to_csv = self.transfer_valkey_to_csv()
+                if convert_to_csv:
+                    purge_valkey_db = self.purge_valkey_db()
+                    if purge_valkey_db:
+                        if self.valkey_process:
+                            kill_valkey = self.valkey_process.terminate()
+                            if kill_valkey:
+                                self.window.destroy()
+                        else:
+                            self.window.destroy()
             else:
                 return  # Prevent closing if shutdown fails
 
-        if self.valkey_process:
-            self.valkey_process.terminate()
-
-        if self.window:
-            self.window.destroy()
 
 
 if __name__ == "__main__":

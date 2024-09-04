@@ -2,7 +2,7 @@ import threading
 import serial
 import time
 import re
-from utils.ValkeyLog import ValkeyLog
+from utils.ValkeyFuncs import ValkeyLog
 
 
 class TemperatureController:
