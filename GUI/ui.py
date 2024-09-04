@@ -17,22 +17,18 @@ class MainWindow(tk.CTk):
         self.initialize_ui()
 
     def initialize_ui(self):
-        # Adjust the width of the frames (relative to window width)
-        io_frame_width = 0.3  # 20% of the window height
-        status_frame_height = 0.05
-
 
         #Status_frame
-        status_frame = tk.CTkFrame(self, height=int(status_frame_height))
+        status_frame = tk.CTkFrame(self)
         status_frame.pack(side=tk.BOTTOM, fill="x")
 
         # IO Frame
-        io_frame = tk.CTkFrame(self, width=int(io_frame_width))
-        io_frame.pack(anchor="w", fill="y", expand=True)
+        io_frame = tk.CTkFrame(self)
+        io_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         #graph Frame
         self.graph_page = GraphPage(self)
-        self.graph_page.pack(anchor="e", fill=tk.BOTH, expand=True)
+        self.graph_page.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Box 1: Autotune Start Button
         autotune_frame = tk.CTkFrame(io_frame)
@@ -81,26 +77,26 @@ class MainWindow(tk.CTk):
         cycle_label.pack(padx=5, pady=10, expand=True)
 
         self.high_temp_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter High Temp")
-        self.high_temp_entry.pack(pady=5)
+        self.high_temp_entry.pack(pady=5, expand=True)
 
         self.low_temp_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Low Temp")
-        self.low_temp_entry.pack(pady=5)
+        self.low_temp_entry.pack(pady=5, expand=True)
 
         self.use_prct_var = tk.IntVar()  # Variable for the checkbox (1 for True, 0 for False)
         self.use_prct_checkbox = tk.CTkCheckBox(cycle_frame, text="Use Percentage", variable=self.use_prct_var)
-        self.use_prct_checkbox.pack(pady=5)
+        self.use_prct_checkbox.pack(pady=5, expand=True)
 
         self.prct_threshold_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Percentage Threshold")
-        self.prct_threshold_entry.pack(pady=5)
+        self.prct_threshold_entry.pack(pady=5, expand=True)
 
         self.t_btw_switch_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Time Between Switches")
-        self.t_btw_switch_entry.pack(pady=5)
+        self.t_btw_switch_entry.pack(pady=5, expand=True)
 
         self.nb_cycle_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Number of Cycles")
-        self.nb_cycle_entry.pack(pady=5)
+        self.nb_cycle_entry.pack(pady=5, expand=True)
 
         start_cycle_button = tk.CTkButton(cycle_frame, text="Start Cycle", command=self.start_cycle)
-        start_cycle_button.pack(pady=5)
+        start_cycle_button.pack(pady=5, expand=True)
 
         # Status Box
         status_box_label = tk.CTkLabel(status_frame, text="Controller Status :")
@@ -152,3 +148,15 @@ class MainWindow(tk.CTk):
 
         ok_button = tk.CTkButton(popup, text="OK", command=popup.destroy)
         ok_button.pack(pady=10)
+
+    def show_valkey_warning_popup(self):
+        v_popup = tk.CTkToplevel(self)
+        v_popup.title("Warning")
+        v_popup.geometry("300x150")
+        v_popup.attributes('-topmost', True)
+
+        label= tk.CTkLabel(v_popup, text ="Failed to initialize valkey database !")
+        label.pack(pady=20)
+
+        v_ok_button = tk.CTkButton(v_popup, text="OK", command=v_popup.destroy)
+        v_ok_button.pack(pady=10)

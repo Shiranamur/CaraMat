@@ -5,12 +5,12 @@ from matplotlib.figure import Figure
 from datetime import datetime, timedelta
 import matplotlib.dates as mdates
 from threading import Lock
-import redis
+import valkey
 
 
 class GraphPage(tk.CTkFrame):
 
-    def __init__(self, master, last_minutes=15):
+    def __init__(self, master, last_minutes=30):
         super().__init__(master)
         self.last_minutes = last_minutes
         self.figure = Figure(figsize=(5, 5), dpi=100)
@@ -34,17 +34,13 @@ class GraphPage(tk.CTkFrame):
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.scale = tk.CTkSlider(self, from_=15, to=180, orientation="horizontal", command=self.update_minutes)
-        self.scale.set(self.last_minutes)
-        self.scale.pack(side=tk.BOTTOM, fill="x", expand=False)
-
         self.animate()  # launch the animation
 
     @staticmethod
     def fetch_data_from_redis(last_minutes=15):
         with Lock():
             try:
-                r = redis.Redis(host='localhost', port=6379, db=0)
+                r = valkey.Redis(host='localhost', port=6379, db=0)
                 keys = r.keys('data_*')
                 data_list = []
                 for key in keys:

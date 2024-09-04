@@ -1,8 +1,10 @@
 import serial
+import os
 from Settings.app_settings import AppSettings
 from utils.PortDetection import list_serial_ports
 from Devices.controller import TemperatureController
 from GUI.ui import MainWindow
+import subprocess
 
 
 class Application:
@@ -10,6 +12,51 @@ class Application:
         self.app_settings = AppSettings()
         self.controller = None
         self.window = None
+        self.valkey_process = None
+        self.valkey_db = None
+
+    def create_valkey_config(self):
+        # Define the path for the Valkey config file
+        valkey_config_path = os.path.join(self.app_settings.settings_folder, "valkey.conf")
+
+        # Database directory and filename
+        db_dir = self.app_settings.get_db_path()  # Path to the Valkey database directory
+        db_filename = "test.db"  # The name of the database file
+
+        # Ensure the database directory exists
+        os.makedirs(db_dir, exist_ok=True)
+
+        # Create the Valkey config file with default settings
+        with open(valkey_config_path, 'w') as config_file:
+            # Directory and DB filename
+            config_file.write(f"dir {db_dir}\n")
+            config_file.write(f"dbfilename {db_filename}\n")
+
+            # Default IP and port settings
+            config_file.write("bind 127.0.0.1\n")  # IP address (localhost)
+            config_file.write("port 6379\n")  # Default port
+
+            # Optional log file path (you can customize this)
+            log_dir = os.path.join(db_dir, "logs")
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = os.path.join(log_dir, "valkey.log")
+            config_file.write(f"logfile {log_file}\n")
+
+            # Default memory settings (adjust as needed)
+            config_file.write("maxmemory 0\n")
+            config_file.write("databases 16\n")
+            config_file.write("save 300 1\n")
+
+        return valkey_config_path
+
+    def start_valkey_process(self):
+        valkey_config_path = self.create_valkey_config()
+        valkey_server_path = "/usr/bin/valkey-server"
+
+        try:
+            self.valkey_process = subprocess.Popen([valkey_server_path, valkey_config_path])
+        except Exception:
+            self.window.show_valkey_warning_popup()
 
     def controller_connection(self):
         available_ports = list_serial_ports()
@@ -59,7 +106,9 @@ class Application:
             self.window.show_warning_popup()
 
     def run(self):
-        self.window = MainWindow(self.app_settings, self.start_autotune, self.send_pid_values, self.stop, self.start_cycle)
+        self.start_valkey_process()
+        self.window = MainWindow(self.app_settings, self.start_autotune, self.send_pid_values, self.stop,
+                                 self.start_cycle)
 
         if not self.controller_connection():
             self.window.show_warning_popup()
@@ -75,6 +124,9 @@ class Application:
                 # implement purge of valkey db and conversion to csv
             else:
                 return  # Prevent closing if shutdown fails
+
+        if self.valkey_process:
+            self.valkey_process.terminate()
 
         if self.window:
             self.window.destroy()
