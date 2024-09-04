@@ -1,4 +1,6 @@
 import customtkinter as tk
+from GUI.graph import GraphPage
+
 
 class MainWindow(tk.CTk):
     def __init__(self, app_settings, start_autotune_callback, send_pid_callback, stop_command, start_cycle_callback):
@@ -16,35 +18,48 @@ class MainWindow(tk.CTk):
 
     def initialize_ui(self):
         # Adjust the width of the frames (relative to window width)
-        frame_width = 0.2  # 20% of the window width
-        frame_height = 0.2  # 20% of the window height
+        io_frame_width = 0.3  # 20% of the window height
+        status_frame_height = 0.05
+
+
+        #Status_frame
+        status_frame = tk.CTkFrame(self, height=int(status_frame_height))
+        status_frame.pack(side=tk.BOTTOM, fill="x")
+
+        # IO Frame
+        io_frame = tk.CTkFrame(self, width=int(io_frame_width))
+        io_frame.pack(anchor="w", fill="y", expand=True)
+
+        #graph Frame
+        self.graph_page = GraphPage(self)
+        self.graph_page.pack(anchor="e", fill=tk.BOTH, expand=True)
 
         # Box 1: Autotune Start Button
-        autotune_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
-        autotune_frame.pack(side="left", anchor="n", fill="y")
+        autotune_frame = tk.CTkFrame(io_frame)
+        autotune_frame.grid(row=0, column=0, padx=5, pady=10)
 
         autotune_label = tk.CTkLabel(autotune_frame, text="Autotune Control")
-        autotune_label.pack(anchor="w", padx=5, pady=5)
+        autotune_label.pack(padx=5, pady=5, expand=True)
 
         start_autotune_button = tk.CTkButton(autotune_frame, text="Start Autotune",
                                              command=self.start_autotune_callback)
         start_autotune_button.pack(pady=5)
 
         # Box 2: PID Control
-        pid_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
-        pid_frame.pack(side="left", anchor="n", fill="y")
+        pid_frame = tk.CTkFrame(io_frame)
+        pid_frame.grid(row=1, column=0, padx=5, pady=10)
 
         pid_label = tk.CTkLabel(pid_frame, text="PID Control")
-        pid_label.pack(anchor="w", padx=5, pady=5)
+        pid_label.pack(padx=5, pady=10, expand=True)
 
         self.current_p_value = tk.CTkLabel(pid_frame, text="Current P Value: 0.0")
-        self.current_p_value.pack(anchor="w", padx=5)
+        self.current_p_value.pack(padx=5)
 
         self.current_i_value = tk.CTkLabel(pid_frame, text="Current I Value: 0.0")
-        self.current_i_value.pack(anchor="w", padx=5)
+        self.current_i_value.pack(padx=5)
 
         self.current_d_value = tk.CTkLabel(pid_frame, text="Current D Value: 0.0")
-        self.current_d_value.pack(anchor="w", padx=5)
+        self.current_d_value.pack(padx=5)
 
         self.new_p_entry = tk.CTkEntry(pid_frame, placeholder_text="Enter new P value")
         self.new_p_entry.pack(pady=5)
@@ -56,14 +71,14 @@ class MainWindow(tk.CTk):
         self.new_d_entry.pack(pady=5)
 
         send_pid_button = tk.CTkButton(pid_frame, text="Send PID Values", command=self.send_pid_values)
-        send_pid_button.pack(pady=5)
+        send_pid_button.pack(pady=10)
 
         # Box 3: Cycle Control
-        cycle_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
-        cycle_frame.pack(side="left", anchor="n", fill="y")
+        cycle_frame = tk.CTkFrame(io_frame)
+        cycle_frame.grid(row=2, column=0, padx=5, pady=10)
 
         cycle_label = tk.CTkLabel(cycle_frame, text="Cycle Control")
-        cycle_label.pack(anchor="w", padx=5, pady=5)
+        cycle_label.pack(padx=5, pady=10, expand=True)
 
         self.high_temp_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter High Temp")
         self.high_temp_entry.pack(pady=5)
@@ -88,15 +103,14 @@ class MainWindow(tk.CTk):
         start_cycle_button.pack(pady=5)
 
         # Status Box
-        status_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
-        status_frame.pack(side="left", anchor="n", fill="y")
-
+        status_box_label = tk.CTkLabel(status_frame, text="Controller Status :")
+        status_box_label.pack(anchor="n", padx=2, pady=2)
         self.status_textbox = tk.CTkTextbox(status_frame, height=10)
         self.status_textbox.pack(pady=5, padx=5, fill="both", expand=True)
 
         # Stop Button
-        stop_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
-        stop_frame.pack(side="left", anchor="n", fill="y")
+        stop_frame = tk.CTkFrame(io_frame)
+        stop_frame.grid(row=3, column=0)
 
         stop_button = tk.CTkButton(stop_frame, text="Stop", command=self.stop_command)
         stop_button.pack(pady=5)

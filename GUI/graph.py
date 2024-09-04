@@ -10,8 +10,8 @@ import redis
 
 class GraphPage(tk.CTkFrame):
 
-    def __init__(self, master, height, last_minutes=15):
-        super().__init__(master, height=height)
+    def __init__(self, master, last_minutes=15):
+        super().__init__(master)
         self.last_minutes = last_minutes
         self.figure = Figure(figsize=(5, 5), dpi=100)
         self.ax = self.figure.add_subplot(111)
