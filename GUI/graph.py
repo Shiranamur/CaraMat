@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 from datetime import datetime, timedelta
 import matplotlib.dates as mdates
 from threading import Lock
-import valkey
+import redis
 
 
 class GraphPage(tk.CTkFrame):
@@ -40,7 +40,7 @@ class GraphPage(tk.CTkFrame):
     def fetch_data_from_redis(last_minutes=15):
         with Lock():
             try:
-                r = valkey.Redis(host='localhost', port=6379, db=0)
+                r = redis.Redis(host='localhost', port=6379, db=0)
                 keys = r.keys('data_*')
                 data_list = []
                 for key in keys:
@@ -74,6 +74,32 @@ class GraphPage(tk.CTkFrame):
         self.last_minutes = int(value)
         self.update_graph()
 
+    # def update_graph(self):
+    #     df = self.fetch_data_from_redis(self.last_minutes)
+    #     if not df.empty:
+    #         self.x_data = list(df['timestamp'])
+    #         self.y_data_d = list(df['sensor_d'])
+    #         self.y_data_a = list(df['sensor_a'])
+    #     else:
+    #         now = datetime.now()
+    #         self.x_data = [now - timedelta(minutes=self.last_minutes) + timedelta(seconds=i) for i in
+    #                        range(0, self.last_minutes * 60, 60)]
+    #         self.y_data_d = [0 for _ in range(len(self.x_data))]
+    #         self.y_data_a = [0 for _ in range(len(self.x_data))]
+    #
+    #     self.plot_d.set_xdata(self.x_data)
+    #     self.plot_d.set_ydata(self.y_data_d)
+    #     self.plot_a.set_xdata(self.x_data)
+    #     self.plot_a.set_ydata(self.y_data_a)
+    #     self.ax.set_xlim(datetime.now() - timedelta(minutes=self.last_minutes), datetime.now())
+    #
+    #     if self.y_data_d and self.y_data_a:
+    #         self.ax.set_ylim(min(min(self.y_data_d), min(self.y_data_a)), max(max(self.y_data_d), max(self.y_data_a)))
+    #     else:
+    #         self.ax.set_ylim(0, 1)
+    #
+    #     self.canvas.draw_idle()
+
     def update_graph(self):
         df = self.fetch_data_from_redis(self.last_minutes)
         if not df.empty:
@@ -87,18 +113,25 @@ class GraphPage(tk.CTkFrame):
             self.y_data_d = [0 for _ in range(len(self.x_data))]
             self.y_data_a = [0 for _ in range(len(self.x_data))]
 
+        # Update the plot data
         self.plot_d.set_xdata(self.x_data)
         self.plot_d.set_ydata(self.y_data_d)
         self.plot_a.set_xdata(self.x_data)
         self.plot_a.set_ydata(self.y_data_a)
-        self.ax.set_xlim(datetime.now() - timedelta(minutes=self.last_minutes), datetime.now())
+
+        # Recalculate limits and apply autoscale
+        self.ax.relim()
+        self.ax.autoscale_view(True, True, True)
 
         if self.y_data_d and self.y_data_a:
             self.ax.set_ylim(min(min(self.y_data_d), min(self.y_data_a)), max(max(self.y_data_d), max(self.y_data_a)))
         else:
-            self.ax.set_ylim(0, 1)
+            self.ax.set_ylim(0, 100)  # Fallback Y-limits
 
-        self.canvas.draw_idle()  # redraw plot
+        self.ax.set_xlim(datetime.now() - timedelta(minutes=self.last_minutes), datetime.now())
+
+        self.canvas.draw_idle()
+
 
     def animate(self):
         self.update_graph()

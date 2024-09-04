@@ -33,16 +33,16 @@ class Application:
             config_file.write(f"dbfilename {db_filename}\n")
 
             # Default IP and port settings
-            config_file.write("bind 127.0.0.1\n")  # IP address (localhost)
-            config_file.write("port 6379\n")  # Default port
+            config_file.write("bind 127.0.0.1\n")
+            config_file.write("port 6379\n")
 
-            # Optional log file path (you can customize this)
+            # Optional log file path
             log_dir = os.path.join(db_dir, "logs")
             os.makedirs(log_dir, exist_ok=True)
             log_file = os.path.join(log_dir, "valkey.log")
             config_file.write(f"logfile {log_file}\n")
 
-            # Default memory settings (adjust as needed)
+            # Default memory settings
             config_file.write("maxmemory 0\n")
             config_file.write("databases 16\n")
             config_file.write("save 300 1\n")

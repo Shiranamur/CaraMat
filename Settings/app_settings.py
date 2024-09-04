@@ -6,7 +6,7 @@ class AppSettings:
         self.title = "Caramat"
         # Define the path relative to the main.py location
         self.project_root = os.path.dirname(os.path.abspath(__file__))  # Root of your project
-        self.db_folder = os.path.join(self.project_root, "..", "data", "Valkey")  # Path to the Valkey folder
+        self.db_folder = os.path.join(self.project_root, "..", "Data", "Valkey")  # Path to the Valkey folder
         self.db_path = os.path.join(self.db_folder, "my_valkey_db.db")  # Path to the Valkey DB file
 
         self.settings_folder = os.path.join(self.project_root, "..", "Settings")

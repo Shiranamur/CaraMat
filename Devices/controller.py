@@ -2,9 +2,7 @@ import threading
 import serial
 import time
 import re
-
-
-# from data.valkey import ValkeyLog
+from utils.ValkeyLog import ValkeyLog
 
 
 class TemperatureController:
@@ -19,7 +17,7 @@ class TemperatureController:
         self.ser = None
         self.lock = threading.Lock()
 
-        #        self.valkey_log = ValkeyLog()
+        self.valkey_log = ValkeyLog()
 
         self.engine_running = False
         self.engine_thread = None
@@ -224,6 +222,7 @@ class TemperatureController:
         else:
             self.start_cycle = True
             self.start_engine_thread()
+
     def cycle_basculement(self):
         """
         Handles the logic for temperature cycle switching based on the current cycle mode and settings.
