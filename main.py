@@ -59,7 +59,7 @@ class Application:
             self.window.show_warning_popup()
 
     def run(self):
-        self.window = MainWindow(self.app_settings, self.start_autotune, self.send_pid_values, self.stop)
+        self.window = MainWindow(self.app_settings, self.start_autotune, self.send_pid_values, self.stop, self.start_cycle)
 
         if not self.controller_connection():
             self.window.show_warning_popup()

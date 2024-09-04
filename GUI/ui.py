@@ -1,7 +1,7 @@
 import customtkinter as tk
 
 class MainWindow(tk.CTk):
-    def __init__(self, app_settings, start_autotune_callback, send_pid_callback, stop_command):
+    def __init__(self, app_settings, start_autotune_callback, send_pid_callback, stop_command, start_cycle_callback):
         super().__init__()
         self.title(app_settings.title)
         self.geometry(app_settings.default_geometry(self))
@@ -9,14 +9,19 @@ class MainWindow(tk.CTk):
         # Store the callbacks
         self.start_autotune_callback = start_autotune_callback
         self.send_pid_callback = send_pid_callback
-        self.stop_command = stop_command  # Store the stop command callback
+        self.stop_command = stop_command
+        self.start_cycle_callback = start_cycle_callback  # Store the start cycle callback
 
         self.initialize_ui()
 
     def initialize_ui(self):
+        # Adjust the width of the frames (relative to window width)
+        frame_width = 0.2  # 20% of the window width
+        frame_height = 0.2  # 20% of the window height
+
         # Box 1: Autotune Start Button
-        autotune_frame = tk.CTkFrame(self)
-        autotune_frame.pack(pady=10, padx=10, fill="x")
+        autotune_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
+        autotune_frame.pack(side="left", anchor="n", fill="y")
 
         autotune_label = tk.CTkLabel(autotune_frame, text="Autotune Control")
         autotune_label.pack(anchor="w", padx=5, pady=5)
@@ -26,8 +31,8 @@ class MainWindow(tk.CTk):
         start_autotune_button.pack(pady=5)
 
         # Box 2: PID Control
-        pid_frame = tk.CTkFrame(self)
-        pid_frame.pack(pady=10, padx=10, fill="x")
+        pid_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
+        pid_frame.pack(side="left", anchor="n", fill="y")
 
         pid_label = tk.CTkLabel(pid_frame, text="PID Control")
         pid_label.pack(anchor="w", padx=5, pady=5)
@@ -53,22 +58,45 @@ class MainWindow(tk.CTk):
         send_pid_button = tk.CTkButton(pid_frame, text="Send PID Values", command=self.send_pid_values)
         send_pid_button.pack(pady=5)
 
-        # Box 3: Cycle Control (Placeholder for future implementation)
-        cycle_frame = tk.CTkFrame(self)
-        cycle_frame.pack(pady=10, padx=10, fill="x")
-        cycle_label = tk.CTkLabel(cycle_frame, text="Cycle Control (Coming Soon)")
+        # Box 3: Cycle Control
+        cycle_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
+        cycle_frame.pack(side="left", anchor="n", fill="y")
+
+        cycle_label = tk.CTkLabel(cycle_frame, text="Cycle Control")
         cycle_label.pack(anchor="w", padx=5, pady=5)
 
+        self.high_temp_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter High Temp")
+        self.high_temp_entry.pack(pady=5)
+
+        self.low_temp_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Low Temp")
+        self.low_temp_entry.pack(pady=5)
+
+        self.use_prct_var = tk.IntVar()  # Variable for the checkbox (1 for True, 0 for False)
+        self.use_prct_checkbox = tk.CTkCheckBox(cycle_frame, text="Use Percentage", variable=self.use_prct_var)
+        self.use_prct_checkbox.pack(pady=5)
+
+        self.prct_threshold_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Percentage Threshold")
+        self.prct_threshold_entry.pack(pady=5)
+
+        self.t_btw_switch_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Time Between Switches")
+        self.t_btw_switch_entry.pack(pady=5)
+
+        self.nb_cycle_entry = tk.CTkEntry(cycle_frame, placeholder_text="Enter Number of Cycles")
+        self.nb_cycle_entry.pack(pady=5)
+
+        start_cycle_button = tk.CTkButton(cycle_frame, text="Start Cycle", command=self.start_cycle)
+        start_cycle_button.pack(pady=5)
+
         # Status Box
-        status_frame = tk.CTkFrame(self)
-        status_frame.pack(pady=10, padx=10, fill="x")
+        status_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
+        status_frame.pack(side="left", anchor="n", fill="y")
 
         self.status_textbox = tk.CTkTextbox(status_frame, height=10)
         self.status_textbox.pack(pady=5, padx=5, fill="both", expand=True)
 
         # Stop Button
-        stop_frame = tk.CTkFrame(self)
-        stop_frame.pack(pady=10, padx=10, fill="x")
+        stop_frame = tk.CTkFrame(self, width=frame_width, height=frame_height)
+        stop_frame.pack(side="left", anchor="n", fill="y")
 
         stop_button = tk.CTkButton(stop_frame, text="Stop", command=self.stop_command)
         stop_button.pack(pady=5)
@@ -80,6 +108,16 @@ class MainWindow(tk.CTk):
 
         self.send_pid_callback(new_p, new_i, new_d)
 
+    def start_cycle(self):
+        high_temp = float(self.high_temp_entry.get())
+        low_temp = float(self.low_temp_entry.get())
+        use_prct = bool(self.use_prct_var.get())
+        prct_threshold = float(self.prct_threshold_entry.get())
+        t_btw_switch = float(self.t_btw_switch_entry.get())
+        nb_cycle = int(self.nb_cycle_entry.get())
+
+        self.start_cycle_callback(high_temp, low_temp, use_prct, prct_threshold, t_btw_switch, nb_cycle)
+
     def update_pid_values(self, p, i, d):
         self.current_p_value.configure(text=f"Current P Value: {p}")
         self.current_i_value.configure(text=f"Current I Value: {i}")
@@ -88,10 +126,6 @@ class MainWindow(tk.CTk):
     def update_status(self, message):
         self.status_textbox.insert(tk.END, message + "\n")
         self.status_textbox.see(tk.END)  # Scroll to the latest message
-
-    def stop_command(self):
-        # This will call the stop command provided by the Application class
-        self.stop_command()
 
     def show_warning_popup(self):
         popup = tk.CTkToplevel(self)
